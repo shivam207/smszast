@@ -1,0 +1,184 @@
+<template>
+    <!-- Trigger Button -->
+    <template lwc:if={showTriggerButton}>
+        <lightning-button id="openTemplateFormBtn" label="Add Template" icon-name="utility:add" variant="brand"
+            onclick={handleOpenModal}>
+        </lightning-button>
+    </template>
+
+    <!-- Modal Backdrop -->
+    <template lwc:if={isOpen}>
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="smsTemplateModalTitle"
+            class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+
+                <!-- Modal Header -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        title="Close" onclick={handleCancel}>
+                        <lightning-icon icon-name="utility:close" size="small"
+                            alternative-text="Close"></lightning-icon>
+                    </button>
+                    <p class="slds-text-heading_label slds-truncate" id="smsTemplateModalSubtitle">SMS Template</p>
+                    <h1 id="smsTemplateModalTitle" class="slds-text-heading_medium slds-hyphenate">
+                        New SMS Template
+                    </h1>
+                </header>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium" id="smsTemplateModalContent">
+
+                    <!-- Row 1: Template Name | Template Object | Status -->
+                    <div class="slds-grid slds-gutters slds-wrap">
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-input id="templateName" label="Template Name" required value={templateName}
+                                onchange={handleTemplateNameChange} placeholder="Enter template name"></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-combobox id="templateObject" label="Template Object" required
+                                value={selectedObject} options={objectOptions} placeholder="Select an Object"
+                                onchange={handleObjectChange}
+                                field-level-help="Select the Salesforce object this template is associated with."></lightning-combobox>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-combobox id="status" label="Status" value={status} options={statusOptions}
+                                onchange={handleStatusChange}></lightning-combobox>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Channels | Folder | Description -->
+                    <div class="slds-grid slds-gutters slds-wrap slds-m-top_medium">
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-input id="channels" label="Channels" value={channels}
+                                placeholder="Select Channel" onchange={handleChannelsChange}
+                                field-level-help="Specify the channel(s) for this template."></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-input id="folder" label="Folder" value={folder} placeholder="Select a Folder"
+                                onchange={handleFolderChange}
+                                field-level-help="Assign this template to a folder."></lightning-input>
+                        </div>
+                        <div class="slds-col slds-size_1-of-3">
+                            <lightning-textarea id="description" label="Description" value={description} rows="3"
+                                onchange={handleDescriptionChange}></lightning-textarea>
+                        </div>
+                    </div>
+
+                    <!-- Generate Merge Field Section -->
+                    <div class="slds-section slds-is-open slds-m-top_medium">
+                        <h3 class="slds-section__title slds-theme_shade">
+                            <button aria-controls="generateMergeFieldContent" aria-expanded={isMergeFieldExpanded}
+                                class="slds-button slds-section__title-action" onclick={toggleMergeField}>
+                                <lightning-icon icon-name="utility:switch" size="x-small"
+                                    class="slds-section__title-action-icon slds-button__icon_left"
+                                    alternative-text="toggle section"></lightning-icon>
+                                <span class="slds-truncate" title="Generate Merge Field">Generate Merge Field</span>
+                            </button>
+                        </h3>
+
+                        <template lwc:if={isMergeFieldExpanded}>
+                            <div id="generateMergeFieldContent" class="slds-section__content slds-p-around_small">
+                                <div class="slds-grid slds-gutters">
+                                    <!-- Object picker -->
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <lightning-combobox id="mergeObject" label="Object" value={mergeObject}
+                                            options={objectOptions} placeholder="Select Object"
+                                            onchange={handleMergeObjectChange}
+                                            field-level-help="Select object to browse its fields."></lightning-combobox>
+                                    </div>
+
+                                    <!-- Fields list -->
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <template lwc:if={isLoadingFields}>
+                                            <lightning-spinner alternative-text="Loading fields"
+                                                size="small"></lightning-spinner>
+                                        </template>
+                                        <template lwc:if={objectFields.length}>
+                                            <div class="slds-form-element">
+                                                <label class="slds-form-element__label">
+                                                    {mergeObjectLabel} Fields
+                                                </label>
+                                                <div class="slds-form-element__control">
+                                                    <div class="field-list slds-box slds-box_small">
+                                                        <template for:each={objectFields} for:item="field">
+                                                            <div key={field.value}
+                                                                class="field-list__item slds-p-around_x-small"
+                                                                data-field={field.value} onclick={handleFieldClick}>
+                                                                {field.label}
+                                                                <template lwc:if={field.hasChildren}>
+                                                                    &gt;
+                                                                </template>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Template Body Section -->
+                    <div class="slds-section slds-is-open slds-m-top_medium">
+                        <h3 class="slds-section__title slds-theme_shade">
+                            <button aria-controls="templateBodyContent" aria-expanded={isTemplateBodyExpanded}
+                                class="slds-button slds-section__title-action" onclick={toggleTemplateBody}>
+                                <lightning-icon icon-name="utility:switch" size="x-small"
+                                    class="slds-section__title-action-icon slds-button__icon_left"
+                                    alternative-text="toggle section"></lightning-icon>
+                                <span class="slds-truncate" title="Template Body">Template Body</span>
+                            </button>
+                        </h3>
+
+                        <template lwc:if={isTemplateBodyExpanded}>
+                            <div id="templateBodyContent" class="slds-section__content slds-p-around_small">
+                                <div class="slds-form-element" style="position: relative;">
+                                    <label class="slds-form-element__label">
+                                        <abbr class="slds-required" title="required">*</abbr>
+                                        Template Body
+                                    </label>
+                                    <div class="slds-form-element__control">
+                                        <textarea id="templateBody" class="slds-textarea template-body-textarea"
+                                            rows="6" maxlength="1000" placeholder="Template Body" value={templateBody}
+                                            onchange={handleTemplateBodyChange}></textarea>
+                                        <!-- Emoji button -->
+                                        <button class="slds-button emoji-btn" title="Insert emoji"
+                                            onclick={handleEmojiClick}>😎</button>
+                                    </div>
+                                    <p class="slds-text-body_small slds-m-top_x-small">
+                                        You can enter upto 1000 characters.
+                                    </p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Error / Toast message -->
+                    <template lwc:if={errorMessage}>
+                        <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error slds-m-top_medium"
+                            role="alert">
+                            <span class="slds-assistive-text">Error</span>
+                            <lightning-icon icon-name="utility:error" size="x-small" alternative-text="Error"
+                                class="slds-m-right_x-small"></lightning-icon>
+                            {errorMessage}
+                        </div>
+                    </template>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" onclick={handleCancel} variant="neutral"
+                        class="slds-m-right_small"></lightning-button>
+                    <lightning-button label="Send Test and Verify Merge Field" variant="neutral"
+                        onclick={handleSendTest} class="slds-m-right_small"></lightning-button>
+                    <lightning-button label="Save" variant="brand" onclick={handleSave}></lightning-button>
+                </footer>
+
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

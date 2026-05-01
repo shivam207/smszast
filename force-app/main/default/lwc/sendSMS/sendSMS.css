@@ -1,0 +1,31 @@
+.slds-modal__container {
+    max-width: 500px;
+}
+
+.slds-modal__header {
+    border-bottom: 1px solid #e5e5e5;
+    text-align: left;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+/* Custom styling for the rich text area to look like a simple text box */
+lightning-input-rich-text {
+    --slds-c-textarea-shadow: none;
+}
+
+.slds-modal__content {
+    border-radius: 0;
+}
+
+.slds-modal__footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+}
+
+.slds-button_brand {
+    padding-left: 2rem;
+    padding-right: 2rem;
+}

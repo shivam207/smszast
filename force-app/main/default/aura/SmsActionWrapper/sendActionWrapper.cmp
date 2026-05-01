@@ -1,0 +1,15 @@
+<aura:component implements="force:lightningQuickActionWithoutHeader,force:hasRecordId">
+    <aura:html tag="style">
+        .slds-modal__container {
+            max-width: 550px !important;
+            width: 550px !important;
+        }
+        .slds-modal__content {
+            overflow: visible !important;
+            height: unset !important;
+            max-height: unset !important;
+        }
+    </aura:html>
+    
+    <c:sendSms recordId="{!v.recordId}" onclose="{!c.handleClose}"/>
+</aura:component>

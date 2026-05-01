@@ -1,0 +1,113 @@
+/* ── Modal container ─────────────────────────────────────────────────────── */
+.slds-modal__container {
+    max-width: 62rem;
+    width: 90%;
+}
+
+/* ── Modal header ────────────────────────────────────────────────────────── */
+.slds-modal__header {
+    background: #0176d3;
+    color: #fff;
+    padding: 1rem 1.5rem;
+}
+
+.slds-modal__header .slds-text-heading_label {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.15rem;
+}
+
+.slds-modal__header .slds-text-heading_medium {
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.slds-modal__close {
+    top: 0.75rem;
+    right: 0.75rem;
+}
+
+/* ── Section headings ────────────────────────────────────────────────────── */
+.slds-section__title.slds-theme_shade {
+    background: #f3f2f2;
+    border-left: 3px solid #0176d3;
+    border-radius: 2px;
+}
+
+.slds-section__title-action {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #181818;
+}
+
+/* ── Field list ──────────────────────────────────────────────────────────── */
+.field-list {
+    max-height: 200px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    padding: 0;
+}
+
+.field-list__item {
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #181818;
+    border-bottom: 1px solid #f3f2f2;
+    transition: background 0.15s ease;
+}
+
+.field-list__item:last-child {
+    border-bottom: none;
+}
+
+.field-list__item:hover {
+    background: #e8f4fd;
+    color: #0176d3;
+}
+
+/* ── Template body textarea ──────────────────────────────────────────────── */
+.template-body-textarea {
+    min-height: 120px;
+    resize: vertical;
+    font-size: 0.875rem;
+    padding-right: 2.5rem; /* room for emoji button */
+}
+
+/* ── Emoji button ────────────────────────────────────────────────────────── */
+.emoji-btn {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    opacity: 0.7;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.emoji-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.slds-modal__footer {
+    background: #f3f2f2;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* ── Scrollable modal body ───────────────────────────────────────────────── */
+.slds-modal__content {
+    overflow-y: auto;
+    max-height: calc(90vh - 140px);
+}

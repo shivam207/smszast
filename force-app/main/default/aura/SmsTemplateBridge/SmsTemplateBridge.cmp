@@ -1,0 +1,10 @@
+<aura:component implements="force:lightningQuickAction,force:hasRecordId">
+    <c:smsTemplateForm onclose="{!c.handleClose}" />
+    
+    <aura:html tag="style">
+        .slds-modal__container {
+            width: 70% !important;
+            max-width: 70% !important;
+        }
+    </aura:html>
+</aura:component>

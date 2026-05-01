@@ -1,0 +1,46 @@
+<template>
+    <lightning-card title="Conversation View" icon-name="standard:messaging_user">
+        <div class="container">
+           <div class="message-area" lwc:ref="scrollContainer">
+    <template for:each={messages} for:item="msg">
+        <div key={msg.id} class={msg.wrapperClass}>
+            <div class="bubble">
+                <p class="text">{msg.body}</p>
+                <div class="footer">
+                    <span>By: {msg.author}</span>
+                    <span>{msg.time}</span>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+
+            <div class="input-section">
+                <div class="toolbar">
+                    <lightning-button-icon icon-name="utility:emoji" variant="bare"></lightning-button-icon>
+                    <lightning-button-icon icon-name="utility:attach" variant="bare"></lightning-button-icon>
+                    <lightning-button-icon icon-name="utility:description" variant="bare"></lightning-button-icon>
+                </div>
+                
+                <div class="input-wrapper">
+                    <textarea 
+                        class="slds-textarea" 
+                        placeholder="Type a message..." 
+                        value={draftMessage}
+                        oninput={handleInputChange}>
+                    </textarea>
+                    <lightning-button-icon 
+                        icon-name="utility:send" 
+                        variant="brand" 
+                        onclick={handleSendMessage}
+                        class="send-btn">
+                    </lightning-button-icon>
+                </div>
+
+                <div class="counter-footer">
+                    <span>{charCount} Characters / {segmentCount} Segment</span>
+                </div>
+            </div>
+        </div>
+    </lightning-card>
+</template>
