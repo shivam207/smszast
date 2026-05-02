@@ -43,6 +43,13 @@ export default class SmsTemplateForm extends LightningElement {
     @track mergeObjectLabel = '';
     @track objectFields = [];
     @track isLoadingFields = false;
+    @track selectedFieldFormula = '';
+    // Drill path for traversing reference fields. Each segment:
+    //   { objectApiName, label, relationshipName }
+    // segment[0] is the root merge object (relationshipName === '').
+    @track mergePath = [];
+
+    MAX_RELATIONSHIP_DEPTH = 5;
 
     @track objectOptions = [];
     @track isLoadingObjects = false;
@@ -138,7 +145,9 @@ export default class SmsTemplateForm extends LightningElement {
                 this.objectFields = result.map(f => ({
                     label: f.label,
                     value: f.value,
-                    hasChildren: f.hasChildren || false
+                    hasChildren: f.hasChildren || false,
+                    relationshipName: f.relationshipName || '',
+                    referenceTo: f.referenceTo || ''
                 }));
             })
             .catch(error => {
@@ -147,6 +156,32 @@ export default class SmsTemplateForm extends LightningElement {
             .finally(() => {
                 this.isLoadingFields = false;
             });
+    }
+
+    get currentDrillObjectApiName() {
+        if (!this.mergePath.length) return '';
+        return this.mergePath[this.mergePath.length - 1].objectApiName;
+    }
+
+    get breadcrumbItems() {
+        return this.mergePath.map((seg, idx) => ({
+            index: idx,
+            label: seg.label,
+            isLast: idx === this.mergePath.length - 1,
+            key: `${idx}-${seg.objectApiName}`
+        }));
+    }
+
+    get hasBreadcrumb() {
+        return this.mergePath.length > 1;
+    }
+
+    buildFormulaPrefix() {
+        // root object label/api + relationship-name segments after it.
+        if (!this.mergePath.length) return '';
+        const root = this.mergePath[0].objectApiName;
+        const rels = this.mergePath.slice(1).map(s => s.relationshipName);
+        return [root, ...rels].join('.');
     }
 
     // ── Field change handlers ─────────────────────────────────────────────────
@@ -162,6 +197,14 @@ export default class SmsTemplateForm extends LightningElement {
         this.mergeObject = this.selectedObject;
         const selected = this.objectOptions.find(o => o.value === this.selectedObject);
         this.mergeObjectLabel = selected ? selected.label : '';
+        this.selectedFieldFormula = '';
+        this.mergePath = this.mergeObject
+            ? [{
+                objectApiName: this.mergeObject,
+                label: this.mergeObjectLabel || this.mergeObject,
+                relationshipName: ''
+            }]
+            : [];
         this.loadFields(this.selectedObject);
         this.clearError();
     }
@@ -236,6 +279,14 @@ export default class SmsTemplateForm extends LightningElement {
         this.mergeObject = event.detail.value;
         const selected = this.objectOptions.find(o => o.value === this.mergeObject);
         this.mergeObjectLabel = selected ? selected.label : '';
+        this.selectedFieldFormula = '';
+        this.mergePath = this.mergeObject
+            ? [{
+                objectApiName: this.mergeObject,
+                label: this.mergeObjectLabel || this.mergeObject,
+                relationshipName: ''
+            }]
+            : [];
         this.loadFields(this.mergeObject);
     }
 
@@ -243,10 +294,52 @@ export default class SmsTemplateForm extends LightningElement {
 
     handleFieldClick(event) {
         const fieldApiName = event.currentTarget.dataset.field;
-        const mergeTag = `{!${this.mergeObject}.${fieldApiName}}`;
+        const field = this.objectFields.find(f => f.value === fieldApiName);
+        if (!field) return;
+
+        if (field.hasChildren && field.relationshipName && field.referenceTo) {
+            this.drillIntoReference(field);
+            return;
+        }
+
+        const prefix = this.buildFormulaPrefix();
+        const mergeTag = prefix
+            ? `{!${prefix}.${fieldApiName}}`
+            : `{!${this.mergeObject}.${fieldApiName}}`;
+        this.selectedFieldFormula = mergeTag;
         this.templateBody = this.templateBody
             ? this.templateBody + mergeTag
             : mergeTag;
+    }
+
+    drillIntoReference(field) {
+        if (this.mergePath.length >= this.MAX_RELATIONSHIP_DEPTH) {
+            this.showToast(
+                'Limit reached',
+                `Salesforce supports up to ${this.MAX_RELATIONSHIP_DEPTH} levels of relationship traversal.`,
+                'warning'
+            );
+            return;
+        }
+        this.mergePath = [
+            ...this.mergePath,
+            {
+                objectApiName: field.referenceTo,
+                label: field.label,
+                relationshipName: field.relationshipName
+            }
+        ];
+        this.selectedFieldFormula = '';
+        this.loadFields(field.referenceTo);
+    }
+
+    handleBreadcrumbClick(event) {
+        const idx = parseInt(event.currentTarget.dataset.index, 10);
+        if (Number.isNaN(idx) || idx < 0 || idx >= this.mergePath.length - 1) return;
+        const target = this.mergePath[idx];
+        this.mergePath = this.mergePath.slice(0, idx + 1);
+        this.selectedFieldFormula = '';
+        this.loadFields(target.objectApiName);
     }
 
     // ── Section toggles ───────────────────────────────────────────────────────
@@ -347,6 +440,8 @@ export default class SmsTemplateForm extends LightningElement {
         this.mergeObject = '';
         this.mergeObjectLabel = '';
         this.objectFields = [];
+        this.selectedFieldFormula = '';
+        this.mergePath = [];
         this.errorMessage = '';
         this.isCreatingFolder = false;
         this.newFolderName = '';

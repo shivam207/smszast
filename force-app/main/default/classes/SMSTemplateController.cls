@@ -47,11 +47,22 @@ public with sharing class SMSTemplateController {
             Schema.DescribeFieldResult field = fieldMap.get(fieldName).getDescribe();
             if (!field.isAccessible()) continue;
 
+            Boolean isRef = (field.getType() == Schema.DisplayType.REFERENCE);
+
             Map<String,Object> entry = new Map<String,Object>();
             entry.put('label', field.getLabel());
             entry.put('value', field.getName());
-            entry.put('hasChildren',
-                field.getType() == Schema.DisplayType.REFERENCE);
+            entry.put('hasChildren', isRef);
+
+            if (isRef) {
+                String relName = field.getRelationshipName();
+                if (relName != null) entry.put('relationshipName', relName);
+                List<Schema.SObjectType> refs = field.getReferenceTo();
+                if (refs != null && !refs.isEmpty()) {
+                    entry.put('referenceTo', refs[0].getDescribe().getName());
+                }
+            }
+
             result.add(entry);
         }
 

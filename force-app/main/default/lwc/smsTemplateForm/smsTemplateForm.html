@@ -97,20 +97,47 @@
                                         <template lwc:if={objectFields.length}>
                                             <div class="slds-form-element">
                                                 <label class="slds-form-element__label">
-                                                    {mergeObjectLabel} Fields
+                                                    Fields
                                                 </label>
+                                                <template lwc:if={hasBreadcrumb}>
+                                                    <div class="merge-breadcrumb slds-m-bottom_x-small">
+                                                        <template for:each={breadcrumbItems} for:item="crumb">
+                                                            <span key={crumb.key} class="merge-breadcrumb__segment">
+                                                                <template lwc:if={crumb.isLast}>
+                                                                    <span class="merge-breadcrumb__current">{crumb.label}</span>
+                                                                </template>
+                                                                <template lwc:else>
+                                                                    <a href="javascript:void(0)"
+                                                                        class="merge-breadcrumb__link"
+                                                                        data-index={crumb.index}
+                                                                        onclick={handleBreadcrumbClick}>{crumb.label}</a>
+                                                                    <span class="merge-breadcrumb__sep"> &gt; </span>
+                                                                </template>
+                                                            </span>
+                                                        </template>
+                                                    </div>
+                                                </template>
                                                 <div class="slds-form-element__control">
                                                     <div class="field-list slds-box slds-box_small">
                                                         <template for:each={objectFields} for:item="field">
                                                             <div key={field.value}
                                                                 class="field-list__item slds-p-around_x-small"
-                                                                data-field={field.value} onclick={handleFieldClick}>
+                                                                data-field={field.value} onclick={handleFieldClick}
+                                                                title={field.label}>
                                                                 {field.label}
                                                                 <template lwc:if={field.hasChildren}>
-                                                                    &gt;
+                                                                    <span class="field-list__chevron">&gt;</span>
                                                                 </template>
                                                             </div>
                                                         </template>
+                                                    </div>
+                                                    <div class="slds-m-top_small">
+                                                        <lightning-input
+                                                            label="Field Formula"
+                                                            value={selectedFieldFormula}
+                                                            readonly
+                                                            placeholder="Click a field above to view its merge formula">
+                                                        </lightning-input>
                                                     </div>
                                                 </div>
                                             </div>

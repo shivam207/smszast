@@ -71,6 +71,41 @@
     color: #0176d3;
 }
 
+.field-list__chevron {
+    float: right;
+    color: #706e6b;
+    font-weight: 600;
+}
+
+.field-list__item:hover .field-list__chevron {
+    color: #0176d3;
+}
+
+/* ── Merge field breadcrumb ──────────────────────────────────────────────── */
+.merge-breadcrumb {
+    font-size: 0.8rem;
+    color: #444;
+}
+
+.merge-breadcrumb__link {
+    color: #0176d3;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.merge-breadcrumb__link:hover {
+    text-decoration: underline;
+}
+
+.merge-breadcrumb__current {
+    color: #181818;
+    font-weight: 600;
+}
+
+.merge-breadcrumb__sep {
+    color: #706e6b;
+}
+
 /* ── New Folder modal (nested above main modal) ──────────────────────────── */
 .new-folder-modal {
     z-index: 9100;
