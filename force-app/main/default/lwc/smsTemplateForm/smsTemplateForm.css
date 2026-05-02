@@ -71,6 +71,20 @@
     color: #0176d3;
 }
 
+/* ── New Folder modal (nested above main modal) ──────────────────────────── */
+.new-folder-modal {
+    z-index: 9100;
+}
+
+.new-folder-backdrop {
+    z-index: 9099;
+}
+
+.new-folder-modal__container {
+    max-width: 32rem;
+    width: 90%;
+}
+
 /* ── Template body textarea ──────────────────────────────────────────────── */
 .template-body-textarea {
     min-height: 120px;

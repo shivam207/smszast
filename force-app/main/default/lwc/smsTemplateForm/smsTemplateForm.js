@@ -2,12 +2,16 @@ import { LightningElement, track, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getAvailableObjects from '@salesforce/apex/SMSTemplateController.getAvailableObjects';
 import getObjectFields from '@salesforce/apex/SMSTemplateController.getObjectFields';
+import getAvailableFolders from '@salesforce/apex/SMSTemplateController.getAvailableFolders';
+import createFolder from '@salesforce/apex/SMSTemplateController.createFolder';
 import saveTemplate from '@salesforce/apex/SMSTemplateController.saveTemplate';
 
 const STATUS_OPTIONS = [
     { label: 'Active', value: 'Active' },
     { label: 'Inactive', value: 'Inactive' }
 ];
+
+const ADD_NEW_FOLDER_VALUE = '__add_new_folder__';
 
 export default class SmsTemplateForm extends LightningElement {
     @api showTriggerButton = false;
@@ -29,6 +33,11 @@ export default class SmsTemplateForm extends LightningElement {
     @track objectOptions = [];
     @track isLoadingObjects = false;
 
+    @track folderOptions = [];
+    @track isCreatingFolder = false;
+    @track newFolderName = '';
+    @track isSavingFolder = false;
+
     @track isMergeFieldExpanded = true;
     @track isTemplateBodyExpanded = true;
 
@@ -37,8 +46,16 @@ export default class SmsTemplateForm extends LightningElement {
 
     statusOptions = STATUS_OPTIONS;
 
+    get folderOptionsWithAdd() {
+        return [
+            { label: '+ Add New Folder', value: ADD_NEW_FOLDER_VALUE },
+            ...this.folderOptions
+        ];
+    }
+
     connectedCallback() {
         this.loadObjects();
+        this.loadFolders();
     }
 
     // ── Open / Close ──────────────────────────────────────────────────────────
@@ -63,6 +80,19 @@ export default class SmsTemplateForm extends LightningElement {
             })
             .finally(() => {
                 this.isLoadingObjects = false;
+            });
+    }
+
+    loadFolders() {
+        getAvailableFolders()
+            .then(result => {
+                this.folderOptions = (result || []).map(f => ({
+                    label: f.label,
+                    value: f.value
+                }));
+            })
+            .catch(error => {
+                this.showToast('Error', 'Failed to load folders: ' + this.reduceError(error), 'error');
             });
     }
 
@@ -115,7 +145,52 @@ export default class SmsTemplateForm extends LightningElement {
     }
 
     handleFolderChange(event) {
-        this.folder = event.target.value;
+        const value = event.detail.value;
+        if (value === ADD_NEW_FOLDER_VALUE) {
+            // Reset the combobox so it doesn't visually stick on the sentinel option.
+            const combo = this.template.querySelector('lightning-combobox.folder-input');
+            if (combo) combo.value = this.folder;
+            this.newFolderName = '';
+            this.isCreatingFolder = true;
+            return;
+        }
+        this.folder = value;
+    }
+
+    handleNewFolderNameChange(event) {
+        this.newFolderName = event.target.value;
+    }
+
+    handleCancelNewFolder() {
+        this.isCreatingFolder = false;
+        this.newFolderName = '';
+    }
+
+    handleSaveNewFolder() {
+        const name = (this.newFolderName || '').trim();
+        if (!name) {
+            this.showToast('Error', 'Folder name is required.', 'error');
+            return;
+        }
+
+        this.isSavingFolder = true;
+        createFolder({ folderName: name })
+            .then(result => {
+                this.folderOptions = [
+                    ...this.folderOptions,
+                    { label: result.label, value: result.value }
+                ].sort((a, b) => a.label.localeCompare(b.label));
+                this.folder = result.value;
+                this.isCreatingFolder = false;
+                this.newFolderName = '';
+                this.showToast('Success', 'Folder created.', 'success');
+            })
+            .catch(error => {
+                this.showToast('Error', 'Failed to create folder: ' + this.reduceError(error), 'error');
+            })
+            .finally(() => {
+                this.isSavingFolder = false;
+            });
     }
 
     handleDescriptionChange(event) {
@@ -242,6 +317,8 @@ export default class SmsTemplateForm extends LightningElement {
         this.mergeObjectLabel = '';
         this.objectFields = [];
         this.errorMessage = '';
+        this.isCreatingFolder = false;
+        this.newFolderName = '';
     }
 
     showToast(title, message, variant) {

@@ -54,9 +54,10 @@
                                 field-level-help="Specify the channel(s) for this template."></lightning-input>
                         </div>
                         <div class="slds-col slds-size_1-of-3">
-                            <lightning-input id="folder" label="Folder" value={folder} placeholder="Select a Folder"
-                                onchange={handleFolderChange}
-                                field-level-help="Assign this template to a folder."></lightning-input>
+                            <lightning-combobox id="folder" label="Folder" value={folder}
+                                options={folderOptionsWithAdd} placeholder="Select a Folder"
+                                onchange={handleFolderChange} class="folder-input"
+                                field-level-help="Assign this template to a folder."></lightning-combobox>
                         </div>
                         <div class="slds-col slds-size_1-of-3">
                             <lightning-textarea id="description" label="Description" value={description} rows="3"
@@ -180,5 +181,38 @@
             </div>
         </section>
         <div class="slds-backdrop slds-backdrop_open"></div>
+
+        <!-- New Folder Modal (nested) -->
+        <template lwc:if={isCreatingFolder}>
+            <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="newFolderModalTitle"
+                class="slds-modal slds-fade-in-open new-folder-modal">
+                <div class="slds-modal__container new-folder-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            title="Close" onclick={handleCancelNewFolder}>
+                            <lightning-icon icon-name="utility:close" size="small"
+                                alternative-text="Close"></lightning-icon>
+                        </button>
+                        <h2 id="newFolderModalTitle" class="slds-text-heading_medium slds-hyphenate">
+                            New Folder
+                        </h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning-input id="newFolderName" label="Folder Name" required
+                            value={newFolderName} placeholder="Enter folder name"
+                            onchange={handleNewFolderNameChange}
+                            disabled={isSavingFolder}></lightning-input>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Cancel" variant="neutral"
+                            onclick={handleCancelNewFolder} disabled={isSavingFolder}
+                            class="slds-m-right_small"></lightning-button>
+                        <lightning-button label="Save" variant="brand"
+                            onclick={handleSaveNewFolder} disabled={isSavingFolder}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open new-folder-backdrop"></div>
+        </template>
     </template>
 </template>
