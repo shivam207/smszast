@@ -16,6 +16,20 @@ const ADD_NEW_FOLDER_VALUE = '__add_new_folder__';
 export default class SmsTemplateForm extends LightningElement {
     @api showTriggerButton = false;
     @api isOpen = false;
+    @api recordId
+
+    _folderId;
+    @api
+    get folderId() {
+        return this._folderId;
+    }
+    set folderId(value) {
+        const v = value == null ? value : String(value).trim();
+        // eslint-disable-next-line no-console
+        console.log('[SmsTemplateForm] folderId setter received:', JSON.stringify(value), '→ normalized:', JSON.stringify(v));
+        this._folderId = v || undefined;
+        this.applyDefaultFolder();
+    }
 
     @track templateName = '';
     @track selectedObject = '';
@@ -90,10 +104,26 @@ export default class SmsTemplateForm extends LightningElement {
                     label: f.label,
                     value: f.value
                 }));
+                this.applyDefaultFolder();
             })
             .catch(error => {
                 this.showToast('Error', 'Failed to load folders: ' + this.reduceError(error), 'error');
             });
+    }
+
+    applyDefaultFolder() {
+        const id = this._folderId;
+        // eslint-disable-next-line no-console
+        console.log('[SmsTemplateForm] applyDefaultFolder — _folderId:', id, '| current folder:', this.folder, '| options loaded:', this.folderOptions && this.folderOptions.length);
+        if (!id || this.folder) return;
+        if (!this.folderOptions || !this.folderOptions.length) return;
+        const key = id.substring(0, 15);
+        const match = this.folderOptions.find(o => o.value && o.value.substring(0, 15) === key);
+        // eslint-disable-next-line no-console
+        console.log('[SmsTemplateForm] applyDefaultFolder — match:', match);
+        if (match) {
+            this.folder = match.value;
+        }
     }
 
     loadFields(objectApiName) {

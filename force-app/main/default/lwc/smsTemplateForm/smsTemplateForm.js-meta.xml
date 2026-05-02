@@ -13,6 +13,7 @@
         <targetConfig targets="lightning__FlowScreen,lightning__AppPage,lightning__RecordPage">
             <property name="isOpen" type="Boolean" label="Is Open" description="Set to true to show the modal by default"/>
             <property name="showTriggerButton" type="Boolean" label="Show Trigger Button" description="Set to true to show the 'Add Template' button"/>
+            <property name="folderId" type="String" label="Folder Id" description="Id of the SMS Template Folder to default the Folder picklist to"/>
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

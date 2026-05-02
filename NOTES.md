@@ -1,11 +1,10 @@
 
 # 1 May 
-- New SMS Template Form, Folder field to show a dropdown with available folders in SMS_Folder__c object and a +Add New button
-- From SMS Folder, when adding a new SMS template, pre select the Folder 
-
+- New SMS Template Form, Folder field to show a dropdown with available folders in SMS_Folder__c object and a +Add New button - DONE
+- From SMS Folder, when adding a new SMS template, pre select the Folder - DONE
 - Preview SMS Template with a test record
-- From SMS Folder, when adding a new SMS template, pre select the Folder 
 - Add Merge field with cross object in SMS template form
+- When Saving a template, redirect to SMS Template List View and show the SMS Template in full tab and not as a modal
 
 
 
