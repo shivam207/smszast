@@ -286,7 +286,7 @@ export default class SmsTemplateForm extends LightningElement {
             .then(() => {
                 this.showToast('Success', 'SMS Template saved successfully.', 'success');
                 this.dispatchEvent(new CustomEvent('saved'));
-                this.closeModal();
+                window.location.assign('/lightning/o/SMS_Template__c/list?filterName=Recent');
             })
             .catch(error => {
                 this.showToast('Error', 'Failed to save template: ' + this.reduceError(error), 'error');
@@ -302,7 +302,8 @@ export default class SmsTemplateForm extends LightningElement {
     }
 
     handleCancel() {
-        this.closeModal();
+        this.dispatchEvent(new CustomEvent('close'));
+        window.location.assign('/lightning/o/SMS_Template__c/list?filterName=Recent');
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

@@ -4,7 +4,9 @@
 - From SMS Folder, when adding a new SMS template, pre select the Folder - DONE
 - Preview SMS Template with a test record
 - Add Merge field with cross object in SMS template form
+
 - When Saving a template, redirect to SMS Template List View and show the SMS Template in full tab and not as a modal
+- On pressing Close button and cancel button as well
 
 
 
