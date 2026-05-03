@@ -5,6 +5,8 @@ import getObjectFields from '@salesforce/apex/SMSTemplateController.getObjectFie
 import getAvailableFolders from '@salesforce/apex/SMSTemplateController.getAvailableFolders';
 import createFolder from '@salesforce/apex/SMSTemplateController.createFolder';
 import saveTemplate from '@salesforce/apex/SMSTemplateController.saveTemplate';
+import previewTemplate from '@salesforce/apex/SMSTemplateController.previewTemplate';
+import getRecentRecords from '@salesforce/apex/SMSTemplateController.getRecentRecords';
 
 const STATUS_OPTIONS = [
     { label: 'Active', value: 'Active' },
@@ -64,6 +66,13 @@ export default class SmsTemplateForm extends LightningElement {
 
     @track errorMessage = '';
     @track isSaving = false;
+
+    @track isPreviewOpen = false;
+    @track previewRecordId = '';
+    @track previewMergedBody = '';
+    @track isLoadingPreview = false;
+    @track recentRecords = [];
+    @track isLoadingRecentRecords = false;
 
     statusOptions = STATUS_OPTIONS;
 
@@ -392,6 +401,112 @@ export default class SmsTemplateForm extends LightningElement {
     handleSendTest() {
         if (!this.validateForm()) return;
         this.showToast('Info', 'Test message sent for merge field verification.', 'info');
+    }
+
+    // ── Preview ───────────────────────────────────────────────────────────────
+
+    get selectedObjectLabel() {
+        const o = this.objectOptions.find(opt => opt.value === this.selectedObject);
+        return o ? o.label : this.selectedObject;
+    }
+
+    get previewRecordPickerLabel() {
+        const lbl = this.selectedObjectLabel || 'record';
+        return `Test ${lbl} Record`;
+    }
+
+    get showNoRecentRecords() {
+        return !this.isLoadingRecentRecords && this.recentRecords.length === 0;
+    }
+
+    handlePreviewClick() {
+        if (!this.selectedObject) {
+            this.showToast('Error', 'Select a Template Object first.', 'error');
+            return;
+        }
+        if (!this.templateBody || !this.templateBody.trim()) {
+            this.showToast('Error', 'Template Body is required to preview.', 'error');
+            return;
+        }
+        this.previewRecordId = '';
+        this.previewMergedBody = '';
+        this.recentRecords = [];
+        this.isPreviewOpen = true;
+        this.loadRecentRecords();
+    }
+
+    loadRecentRecords() {
+        this.isLoadingRecentRecords = true;
+        getRecentRecords({ objectApiName: this.selectedObject, maxResults: 10 })
+            .then(result => {
+                this.recentRecords = (result || []).map(r => this.buildRecentRecord(r.id, r.name));
+            })
+            .catch(error => {
+                this.showToast('Error', 'Failed to load recent records: ' + this.reduceError(error), 'error');
+            })
+            .finally(() => {
+                this.isLoadingRecentRecords = false;
+            });
+    }
+
+    buildRecentRecord(id, name) {
+        const isSelected = id === this.previewRecordId;
+        return {
+            id,
+            name,
+            itemClass: isSelected
+                ? 'recent-record-list__item is-selected slds-p-around_x-small'
+                : 'recent-record-list__item slds-p-around_x-small'
+        };
+    }
+
+    handlePreviewRecordChange(event) {
+        const recordId = event.detail && event.detail.recordId;
+        this.previewRecordId = recordId || '';
+        this.markSelectedRecent();
+        if (!this.previewRecordId) {
+            this.previewMergedBody = '';
+            return;
+        }
+        this.loadPreview();
+    }
+
+    handleRecentRecordClick(event) {
+        const recordId = event.currentTarget.dataset.id;
+        if (!recordId || recordId === this.previewRecordId) return;
+        this.previewRecordId = recordId;
+        this.markSelectedRecent();
+        this.loadPreview();
+    }
+
+    markSelectedRecent() {
+        this.recentRecords = this.recentRecords.map(r => this.buildRecentRecord(r.id, r.name));
+    }
+
+    loadPreview() {
+        this.isLoadingPreview = true;
+        this.previewMergedBody = '';
+        previewTemplate({
+            objectApiName: this.selectedObject,
+            recordId: this.previewRecordId,
+            body: this.templateBody
+        })
+            .then(merged => {
+                this.previewMergedBody = merged || '';
+            })
+            .catch(error => {
+                this.showToast('Error', 'Preview failed: ' + this.reduceError(error), 'error');
+            })
+            .finally(() => {
+                this.isLoadingPreview = false;
+            });
+    }
+
+    handleClosePreview() {
+        this.isPreviewOpen = false;
+        this.previewRecordId = '';
+        this.previewMergedBody = '';
+        this.recentRecords = [];
     }
 
     handleCancel() {

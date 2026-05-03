@@ -9,7 +9,6 @@ public with sharing class SMSController {
         return [SELECT Id, Name, Message_Body__c 
                 FROM SMS_Template__c 
                 WHERE Object_Type__c = :sObjName 
-                AND IsActive__c = true
                 ORDER BY Name ASC];
     }
     

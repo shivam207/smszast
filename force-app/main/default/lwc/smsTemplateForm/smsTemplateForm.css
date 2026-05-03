@@ -120,6 +120,67 @@
     width: 90%;
 }
 
+/* ── Preview modal (nested above main modal) ─────────────────────────────── */
+.preview-modal {
+    z-index: 9100;
+}
+
+.preview-backdrop {
+    z-index: 9099;
+}
+
+.preview-modal__container {
+    max-width: 40rem;
+    width: 90%;
+}
+
+.preview-message-box {
+    background: #f3f2f2;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #181818;
+}
+
+.recent-record-list {
+    max-height: 220px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #dddbda;
+    border-radius: 4px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.recent-record-list__item {
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: #181818;
+    border-bottom: 1px solid #f3f2f2;
+    transition: background 0.15s ease;
+}
+
+.recent-record-list__item:last-child {
+    border-bottom: none;
+}
+
+.recent-record-list__item:hover {
+    background: #e8f4fd;
+    color: #0176d3;
+}
+
+.recent-record-list__item.is-selected {
+    background: #cfe7fb;
+    color: #0176d3;
+    font-weight: 600;
+}
+
 /* ── Template body textarea ──────────────────────────────────────────────── */
 .template-body-textarea {
     min-height: 120px;

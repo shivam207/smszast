@@ -200,6 +200,8 @@
                 <footer class="slds-modal__footer">
                     <lightning-button label="Cancel" onclick={handleCancel} variant="neutral"
                         class="slds-m-right_small"></lightning-button>
+                    <lightning-button label="Preview" variant="neutral"
+                        onclick={handlePreviewClick} class="slds-m-right_small"></lightning-button>
                     <lightning-button label="Send Test and Verify Merge Field" variant="neutral"
                         onclick={handleSendTest} class="slds-m-right_small"></lightning-button>
                     <lightning-button label="Save" variant="brand" onclick={handleSave}></lightning-button>
@@ -240,6 +242,79 @@
                 </div>
             </section>
             <div class="slds-backdrop slds-backdrop_open new-folder-backdrop"></div>
+        </template>
+
+        <!-- Preview Modal (nested) -->
+        <template lwc:if={isPreviewOpen}>
+            <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="previewModalTitle"
+                class="slds-modal slds-fade-in-open preview-modal">
+                <div class="slds-modal__container preview-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            title="Close" onclick={handleClosePreview}>
+                            <lightning-icon icon-name="utility:close" size="small"
+                                alternative-text="Close"></lightning-icon>
+                        </button>
+                        <h2 id="previewModalTitle" class="slds-text-heading_medium slds-hyphenate">
+                            Preview SMS Template
+                        </h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <p class="slds-m-bottom_small">
+                            Select a test record to see the merged message body.
+                        </p>
+                        <lightning-record-picker
+                            label={previewRecordPickerLabel}
+                            placeholder="Search..."
+                            object-api-name={selectedObject}
+                            value={previewRecordId}
+                            onchange={handlePreviewRecordChange}>
+                        </lightning-record-picker>
+
+                        <div class="slds-m-top_small">
+                            <label class="slds-form-element__label">Recent {selectedObjectLabel} Records</label>
+                            <template lwc:if={isLoadingRecentRecords}>
+                                <div class="slds-align_absolute-center slds-p-around_x-small">
+                                    <lightning-spinner alternative-text="Loading recent records" size="x-small"></lightning-spinner>
+                                </div>
+                            </template>
+                            <template lwc:if={recentRecords.length}>
+                                <ul class="recent-record-list slds-box slds-box_small">
+                                    <template for:each={recentRecords} for:item="rec">
+                                        <li key={rec.id} class={rec.itemClass}
+                                            data-id={rec.id} onclick={handleRecentRecordClick}>
+                                            {rec.name}
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+                            <template lwc:if={showNoRecentRecords}>
+                                <p class="slds-text-body_small slds-text-color_weak slds-p-around_x-small">
+                                    No recent records found.
+                                </p>
+                            </template>
+                        </div>
+
+                        <template lwc:if={isLoadingPreview}>
+                            <div class="slds-m-top_medium slds-align_absolute-center">
+                                <lightning-spinner alternative-text="Loading preview" size="small"></lightning-spinner>
+                            </div>
+                        </template>
+
+                        <template lwc:if={previewMergedBody}>
+                            <div class="slds-m-top_medium">
+                                <label class="slds-form-element__label">Preview</label>
+                                <div class="preview-message-box">{previewMergedBody}</div>
+                            </div>
+                        </template>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Close" variant="neutral"
+                            onclick={handleClosePreview}></lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open preview-backdrop"></div>
         </template>
     </template>
 </template>

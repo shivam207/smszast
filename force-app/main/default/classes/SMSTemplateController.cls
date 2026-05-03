@@ -114,6 +114,111 @@ public with sharing class SMSTemplateController {
     }
 
     /**
+     * Returns recent records of the given object (Id + display name) so the
+     * preview UI can show a list without requiring the user to search first.
+     */
+    @AuraEnabled(cacheable=true)
+    public static List<Map<String,String>> getRecentRecords(String objectApiName, Integer maxResults) {
+        List<Map<String,String>> result = new List<Map<String,String>>();
+        if (String.isBlank(objectApiName)) return result;
+
+        Schema.SObjectType objType = Schema.getGlobalDescribe().get(objectApiName);
+        if (objType == null) return result;
+
+        // Resolve the object's "name" field (Subject for Task, CaseNumber for Case, etc.)
+        String nameField = 'Id';
+        for (Schema.SObjectField f : objType.getDescribe().fields.getMap().values()) {
+            Schema.DescribeFieldResult dfr = f.getDescribe();
+            if (dfr.isNameField()) {
+                nameField = dfr.getName();
+                break;
+            }
+        }
+
+        Integer lim = (maxResults == null || maxResults <= 0) ? 10 : maxResults;
+        String soql = 'SELECT Id, ' + nameField + ' FROM ' + objectApiName
+            + ' WITH USER_MODE ORDER BY LastModifiedDate DESC LIMIT ' + lim;
+
+        for (SObject rec : Database.query(soql)) {
+            Map<String,String> m = new Map<String,String>();
+            m.put('id', (String)((Id) rec.get('Id')));
+            Object n = rec.get(nameField);
+            m.put('name', n == null ? (String)((Id) rec.get('Id')) : String.valueOf(n));
+            result.add(m);
+        }
+        return result;
+    }
+
+    /**
+     * Renders an SMS template body for a given test record by replacing
+     * merge tags (e.g. {!Account.Name}, {!Account.Owner.Email}) with values
+     * from the record. Uses dynamic SOQL with relationship traversal.
+     */
+    @AuraEnabled
+    public static String previewTemplate(String objectApiName, Id recordId, String body) {
+        if (String.isBlank(objectApiName) || recordId == null || String.isBlank(body)) {
+            return body;
+        }
+
+        Schema.SObjectType objType = Schema.getGlobalDescribe().get(objectApiName);
+        if (objType == null) {
+            throw new AuraHandledException('Unknown object: ' + objectApiName);
+        }
+
+        // Map of full tag (e.g. "{!Account.Name}") -> SOQL path ("Name", "Owner.Email")
+        Map<String, String> tagToPath = new Map<String, String>();
+        Pattern p = Pattern.compile('\\{!([A-Za-z_][A-Za-z0-9_\\.]*)\\}');
+        Matcher m = p.matcher(body);
+        while (m.find()) {
+            String tag = m.group(0);
+            String tagBody = m.group(1);
+            List<String> parts = tagBody.split('\\.');
+            if (parts.size() < 2) continue;
+            // The first segment must be the merge object; strip it.
+            if (parts[0] != objectApiName) continue;
+            List<String> rest = new List<String>();
+            for (Integer i = 1; i < parts.size(); i++) rest.add(parts[i]);
+            tagToPath.put(tag, String.join(rest, '.'));
+        }
+
+        if (tagToPath.isEmpty()) return body;
+
+        Set<String> uniquePaths = new Set<String>(tagToPath.values());
+        String soql = 'SELECT ' + String.join(new List<String>(uniquePaths), ', ')
+            + ' FROM ' + objectApiName
+            + ' WHERE Id = :recordId LIMIT 1';
+
+        List<SObject> records;
+        try {
+            records = Database.query(soql);
+        } catch (Exception e) {
+            throw new AuraHandledException('Failed to load record: ' + e.getMessage());
+        }
+        if (records.isEmpty()) {
+            throw new AuraHandledException('Record not found.');
+        }
+        SObject record = records[0];
+
+        String merged = body;
+        for (String tag : tagToPath.keySet()) {
+            Object val = traverseField(record, tagToPath.get(tag));
+            merged = merged.replace(tag, val == null ? '' : String.valueOf(val));
+        }
+        return merged;
+    }
+
+    private static Object traverseField(SObject record, String path) {
+        List<String> parts = path.split('\\.');
+        SObject cur = record;
+        for (Integer i = 0; i < parts.size() - 1; i++) {
+            if (cur == null) return null;
+            cur = cur.getSObject(parts[i]);
+        }
+        if (cur == null) return null;
+        return cur.get(parts[parts.size() - 1]);
+    }
+
+    /**
      * Persists a new SMS Template record from a JSON payload.
      * Expected JSON keys: name, objectApiName, status, channels, folder, description, body
      */
